@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
 import { useTaskStore } from "./store/useTaskStore";
+import type { Status } from "./types/types";
 
 function App() {
   const tasks = useTaskStore((state) => state.tasks);
   const setTasks = useTaskStore((state) => state.setTasks);
   const addTask = useTaskStore((state) => state.addTask);
+  const deleteTask = useTaskStore((state) => state.deleteTask);
+  const updateTaskStatus = useTaskStore((state) => state.updateTaskStatus);
 
   const [inputValue, setInputValue] = useState("");
 
@@ -22,6 +25,29 @@ function App() {
     if (error) console.error("Error:", error.message);
 
     setInputValue("");
+  }
+
+  async function handleDelete(id: string) {
+    const { error } = await supabase.from("tasks").delete().eq("id", id);
+
+    if (!error) {
+      deleteTask(id);
+    } else {
+      console.error("Error:", error.message);
+    }
+  }
+
+  async function handleStatusChange(id: string, newStatus: Status) {
+    const { error } = await supabase
+      .from("tasks")
+      .update({ status: newStatus })
+      .eq("id", id);
+
+    if (!error) {
+      updateTaskStatus(id, newStatus);
+    } else {
+      console.error("Error:", error.message);
+    }
   }
 
   useEffect(() => {
@@ -66,6 +92,25 @@ function App() {
                 className="p-4 bg-gray-800 rounded-lg border border-gray-700"
               >
                 {task.title}
+                <select
+                  className="bg-gray-700 text-xs p-1 rounded ml-2 cursor-pointer"
+                  value={task.status}
+                  onChange={(e) => {
+                    handleStatusChange(task.id, e.target.value as Status);
+                  }}
+                >
+                  <option value="todo">Todo</option>
+                  <option value="doing">Doing</option>
+                  <option value="done">Done</option>
+                </select>
+                <button
+                  className="ml-4 text-red-500 hover:text-red-400 text-sm"
+                  onClick={() => {
+                    handleDelete(task.id);
+                  }}
+                >
+                  Delete
+                </button>
               </div>
             ))}
         </div>
@@ -79,6 +124,14 @@ function App() {
                 className="p-4 bg-gray-800 rounded-lg border border-gray-700"
               >
                 {task.title}
+                <button
+                  className="ml-4 text-red-500 hover:text-red-400 text-sm"
+                  onClick={() => {
+                    handleDelete(task.id);
+                  }}
+                >
+                  Delete
+                </button>
               </div>
             ))}
         </div>
@@ -92,6 +145,14 @@ function App() {
                 className="p-4 bg-gray-800 rounded-lg border border-gray-700"
               >
                 {task.title}
+                <button
+                  className="ml-4 text-red-500 hover:text-red-400 text-sm"
+                  onClick={() => {
+                    handleDelete(task.id);
+                  }}
+                >
+                  Delete
+                </button>
               </div>
             ))}
         </div>
