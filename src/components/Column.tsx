@@ -1,5 +1,6 @@
 import TaskCard from "./TaskCard";
 import type { Task, Status } from "../types/types";
+import { AnimatePresence } from "framer-motion";
 
 interface ColumnProps {
   title: string;
@@ -16,12 +17,15 @@ function Column({
   onDelete,
   onStatusChange,
 }: ColumnProps) {
+  const columnTasks = tasks.filter((t) => t.status === status);
+
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold mb-4 text-gray-400">{title}</h2>
-      {tasks
-        .filter((t) => t.status === status)
-        .map((task) => (
+      <h2 className="text-xl font-bold mb-4 text-gray-400">
+        {title} <span className="text-gray-600 ml-2">{columnTasks.length}</span>
+      </h2>
+      <AnimatePresence>
+        {columnTasks.map((task) => (
           <TaskCard
             key={task.id}
             task={task}
@@ -29,6 +33,7 @@ function Column({
             onStatusChange={onStatusChange}
           />
         ))}
+      </AnimatePresence>
     </div>
   );
 }
