@@ -4,9 +4,12 @@ import { useTaskStore } from "./store/useTaskStore";
 import type { Status } from "./types/types";
 import Column from "./components/Column";
 import TaskInput from "./components/TaskInput";
+import Auth from "./components/Auth";
 
 function App() {
   const tasks = useTaskStore((state) => state.tasks);
+  const user = useTaskStore((state) => state.user);
+  const setUser = useTaskStore((state) => state.setUser);
   const setTasks = useTaskStore((state) => state.setTasks);
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const updateTaskStatus = useTaskStore((state) => state.updateTaskStatus);
@@ -36,6 +39,8 @@ function App() {
 
   useEffect(() => {
     async function fetchTasks() {
+      if (user === null) return;
+
       const { data, error } = await supabase.from("tasks").select("*");
 
       if (error) console.error("Error:", error.message);
@@ -44,11 +49,42 @@ function App() {
       }
     }
     fetchTasks();
-  }, [setTasks]);
+  }, [setTasks, user]);
+
+  useEffect(() => {
+    async function checkSession() {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) console.error("Error:", error.message);
+      else if (session) {
+        setUser(session.user);
+      }
+    }
+
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) setUser(session.user);
+      else setUser(null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [setUser]);
+
+  if (!user) {
+    return <Auth />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-white p-10">
       <h1 className="text-4xl font-bold mb-5">Kanban</h1>
+
+      <button>Logout</button>
 
       <TaskInput />
 
