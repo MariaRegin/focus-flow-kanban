@@ -9,8 +9,8 @@ import Auth from "./components/Auth";
 function App() {
   const tasks = useTaskStore((state) => state.tasks);
   const user = useTaskStore((state) => state.user);
-  const setUser = useTaskStore((state) => state.setUser);
   const setTasks = useTaskStore((state) => state.setTasks);
+  const setUser = useTaskStore((state) => state.setUser);
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const updateTaskStatus = useTaskStore((state) => state.updateTaskStatus);
 
@@ -35,6 +35,12 @@ function App() {
     } else {
       console.error("Error:", error.message);
     }
+  }
+
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) console.error("Error:", error.message);
   }
 
   useEffect(() => {
@@ -71,6 +77,7 @@ function App() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) setUser(session.user);
       else setUser(null);
+      setTasks([]);
     });
 
     return () => subscription.unsubscribe();
@@ -83,8 +90,12 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-900 text-white p-10">
       <h1 className="text-4xl font-bold mb-5">Kanban</h1>
-
-      <button>Logout</button>
+      <button
+        className="bg-red-900/20 text-red-500 px-4 py-2 rounded-lg hover:bg-red-900/40 transition-colors"
+        onClick={handleLogout}
+      >
+        Logout
+      </button>
 
       <TaskInput />
 
