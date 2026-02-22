@@ -3,16 +3,19 @@ import { supabase } from "../lib/supabase";
 import { useTaskStore } from "../store/useTaskStore";
 
 function TaskInput() {
+  const user = useTaskStore((state) => state.user);
   const addTask = useTaskStore((state) => state.addTask);
 
   const [inputValue, setInputValue] = useState("");
 
   async function handleCreate() {
+    if (!user) return;
+
     if (!inputValue.trim()) return;
 
     const { data, error } = await supabase
       .from("tasks")
-      .insert([{ title: inputValue, status: "todo" }])
+      .insert([{ user_id: user.id, title: inputValue, status: "todo" }])
       .select()
       .single();
 
