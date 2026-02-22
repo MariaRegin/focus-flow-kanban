@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { supabase } from "./lib/supabase";
 import { useTaskStore } from "./store/useTaskStore";
 import type { Status } from "./types/types";
+import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import Column from "./components/Column";
 import TaskInput from "./components/TaskInput";
 import Auth from "./components/Auth";
@@ -14,6 +15,17 @@ function App() {
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const updateTaskStatus = useTaskStore((state) => state.updateTaskStatus);
 
+  const onDragEnd = (result: DropResult) => {
+    const { destination, draggableId } = result;
+
+    if (!destination) return;
+
+    if (destination.droppableId === result.source.droppableId) return;
+
+    const newStatus = destination.droppableId as Status;
+    handleStatusChange(draggableId, newStatus);
+  };
+
   async function handleDelete(id: string) {
     const { error } = await supabase.from("tasks").delete().eq("id", id);
 
@@ -25,14 +37,14 @@ function App() {
   }
 
   async function handleStatusChange(id: string, newStatus: Status) {
+    updateTaskStatus(id, newStatus);
+
     const { error } = await supabase
       .from("tasks")
       .update({ status: newStatus })
       .eq("id", id);
 
-    if (!error) {
-      updateTaskStatus(id, newStatus);
-    } else {
+    if (error) {
       console.error("Error:", error.message);
     }
   }
@@ -77,7 +89,7 @@ function App() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) setUser(session.user);
       else setUser(null);
-      setTasks([]);
+      if (!session) setTasks([]);
     });
 
     return () => subscription.unsubscribe();
@@ -99,29 +111,31 @@ function App() {
 
       <TaskInput />
 
-      <div className="grid grid-cols-3 gap-6">
-        <Column
-          title="Todo"
-          status="todo"
-          tasks={tasks}
-          onDelete={handleDelete}
-          onStatusChange={handleStatusChange}
-        />
-        <Column
-          title="Doing"
-          status="doing"
-          tasks={tasks}
-          onDelete={handleDelete}
-          onStatusChange={handleStatusChange}
-        />
-        <Column
-          title="Done"
-          status="done"
-          tasks={tasks}
-          onDelete={handleDelete}
-          onStatusChange={handleStatusChange}
-        />
-      </div>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="grid grid-cols-3 gap-6">
+          <Column
+            title="Todo"
+            status="todo"
+            tasks={tasks}
+            onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
+          />
+          <Column
+            title="Doing"
+            status="doing"
+            tasks={tasks}
+            onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
+          />
+          <Column
+            title="Done"
+            status="done"
+            tasks={tasks}
+            onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
+          />
+        </div>
+      </DragDropContext>
     </div>
   );
 }

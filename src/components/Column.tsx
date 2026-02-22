@@ -1,6 +1,6 @@
 import TaskCard from "./TaskCard";
 import type { Task, Status } from "../types/types";
-import { AnimatePresence } from "framer-motion";
+import { Droppable } from "@hello-pangea/dnd";
 
 interface ColumnProps {
   title: string;
@@ -24,16 +24,26 @@ function Column({
       <h2 className="text-xl font-bold mb-4 text-gray-400">
         {title} <span className="text-gray-600 ml-2">{columnTasks.length}</span>
       </h2>
-      <AnimatePresence>
-        {columnTasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onDelete={onDelete}
-            onStatusChange={onStatusChange}
-          />
-        ))}
-      </AnimatePresence>
+      <Droppable droppableId={status}>
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className="min-h-screen"
+          >
+            {columnTasks.map((task, index) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onDelete={onDelete}
+                onStatusChange={onStatusChange}
+                index={index}
+              />
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
     </div>
   );
 }
