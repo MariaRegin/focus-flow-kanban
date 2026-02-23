@@ -10,10 +10,12 @@ import Auth from "./components/Auth";
 function App() {
   const tasks = useTaskStore((state) => state.tasks);
   const user = useTaskStore((state) => state.user);
+  const isLoading = useTaskStore((state) => state.isLoading);
   const setTasks = useTaskStore((state) => state.setTasks);
   const setUser = useTaskStore((state) => state.setUser);
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const updateTaskStatus = useTaskStore((state) => state.updateTaskStatus);
+  const setIsLoading = useTaskStore((state) => state.setIsLoading);
 
   const onDragEnd = (result: DropResult) => {
     const { destination, draggableId } = result;
@@ -59,10 +61,15 @@ function App() {
     async function fetchTasks() {
       if (user === null) return;
 
+      setIsLoading(true);
+
       const { data, error } = await supabase.from("tasks").select("*");
 
-      if (error) console.error("Error:", error.message);
-      else if (data) {
+      if (error) {
+        setIsLoading(false);
+        console.error("Error:", error.message);
+      } else if (data) {
+        setIsLoading(false);
         setTasks(data);
       }
     }
@@ -99,15 +106,42 @@ function App() {
     return <Auth />;
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-400 font-medium animate-pulse">
+            Loading tasks...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-900 text-white p-10">
-      <h1 className="text-4xl font-bold mb-5">Kanban</h1>
-      <button
-        className="bg-red-900/20 text-red-500 px-4 py-2 rounded-lg hover:bg-red-900/40 transition-colors"
-        onClick={handleLogout}
-      >
-        Logout
-      </button>
+      <header className="flex justify-between items-center mb-10 pb-6 border-b border-gray-800">
+        <div className="flex items-center gap-4">
+          <h1 className="text-4xl font-bold bg-linear-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+            Kanban
+          </h1>
+          <span className="bg-blue-500/10 text-blue-500 text-[10px] px-2 py-1 rounded-full border border-blue-500/20 uppercase font-bold">
+            Beta
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-500">{user?.email}</span>
+
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-red-900/30 text-gray-400 hover:text-red-500 border border-gray-700 hover:border-red-900/50 transition-all text-sm font-medium"
+          >
+            Log out
+          </button>
+        </div>
+      </header>
 
       <TaskInput />
 

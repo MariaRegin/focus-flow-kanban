@@ -21,9 +21,20 @@ function Column({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold mb-4 text-gray-400">
-        {title} <span className="text-gray-600 ml-2">{columnTasks.length}</span>
-      </h2>
+      <div className="flex items-center justify-between mb-4 px-2">
+        <div className="flex items-center gap-2">
+          <div
+            className={`w-2 h-2 rounded-full ${status === "todo" ? "bg-gray-500" : status === "doing" ? "bg-blue-500" : "bg-emerald-500"}`}
+          />
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+            {title}
+          </h2>
+        </div>
+        <span className="text-xs font-bold bg-gray-800 px-2 py-0.5 rounded-full text-gray-500 border border-gray-700">
+          {columnTasks.length}
+        </span>
+      </div>
+
       <Droppable droppableId={status}>
         {(provided) => (
           <div
