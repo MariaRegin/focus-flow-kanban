@@ -9,16 +9,21 @@ function TaskInput() {
   const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState("");
 
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => setError(""), 5000);
+  };
+
   async function handleCreate() {
     setError("");
 
     if (!user) {
-      setError("You must be logged in");
+      showError("You must be logged in");
       return;
     }
 
     if (!inputValue.trim()) {
-      setError("Task title cannot be empty");
+      showError("Task title cannot be empty");
       return;
     }
 
@@ -29,11 +34,10 @@ function TaskInput() {
       .single();
 
     if (dbError) {
-      setError(dbError.message);
+      showError(dbError.message);
     } else if (data) {
       addTask(data);
       setInputValue("");
-      setError("");
     }
   }
 
